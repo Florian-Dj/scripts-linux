@@ -7,24 +7,29 @@
 ###########################
 
 
+echo -n "Project name (user): "
+read PROJET
+USER=$( echo "${PROJET}" | cut -c1-30 )
+echo -n "Domain name (domain.extension): "
+read DOMAIN
+echo -n "Repository URL: "
+read REPO
+
 
 function usercreation(){
-    echo -n "Project name (user): "
-    read PROJET
-    USER=$( echo "${PROJET}" | cut -c1-30 )
-    echo -n "Domain name (domain.extension): "
-    read DOMAIN
     useradd -m -s /bin/bash -d /home/${DOMAIN} ${USER}
     echo "Creating the SSH key for GIT"
     sudo -H -u ${USER} bash -c 'ssh-keygen -t rsa -b 4096 -N "" -C "${USER}@${DOMAIN}" -f ~/.ssh/id_rsa -q -P ""'
-    sudo -H -u ${USER} bash -c 'mkdir /var/www/html/${DOMAIN}'
+    mkdir -p /var/www/html/${DOMAIN} /home/${DOMAIN}/log
+    chown -R ${USER}: /var/www/html/${DOMAIN}
+    chown -R ${USER}: /home/${DOMAIN}/log
 }
 
 function createvhost(){
 echo "<VirtualHost *:80>
   ServerName ${DOMAIN}
   ServerAlias www.${DOMAIN}
-  DocumentRoot /var/www/html/${USER}
+  DocumentRoot /var/www/html/${DOMAIN}
 
   <IfModule mod_suexec.c>
     SuexecUserGroup \"${USER}\" \"${USER}\"
@@ -40,15 +45,15 @@ echo "<VirtualHost *:80>
   # Etag
   FileETag None
 
-  <Directory /var/www/html/${USER}>
+  <Directory /var/www/html/${DOMAIN}>
    AllowOverride All
    Require all granted
 
    Options +FollowSymLinks -Indexes
   </Directory>
 
-  CustomLog /home/${USER}/log/access.log combined
-  ErrorLog /home/${USER}/log/error.log
+  CustomLog /home/${DOMAIN}/log/access.log combined
+  ErrorLog /home/${DOMAIN}/log/error.log
 </VirtualHost>
 " > /etc/apache2/sites-available/${DOMAIN}.conf
     /usr/sbin/a2ensite ${DOMAIN}.conf
@@ -64,19 +69,19 @@ echo "<VirtualHost *:80>
     echo "Apache - config reload"
     /etc/init.d/apache2 reload > /dev/null 2>&1
 
-    certbot certonly --non-interactive --email floriandjerbi@gmail.com --agree-tos --expand --webroot --webroot-path /var/www/html/${USER} --domain ${DOMAIN} --domain www.${DOMAIN}   > /dev/null 2>&1
-        RESULT=$?
-        if [ $RESULT -eq 0 ]; then
-                 _success "Apache - SSL create"
-        else
-                _error "Apache - SSL fail"
-                exit 1
-        fi
+    certbot certonly --non-interactive --email floriandjerbi@gmail.com --agree-tos --expand --webroot --webroot-path /var/www/html/${DOMAIN} --domain ${DOMAIN} --domain www.${DOMAIN}   > /dev/null 2>&1
+    RESULT=$?
+    if [ $RESULT -eq 0 ]; then
+        echo "Apache - SSL create"
+    else
+        echo "Apache - SSL fail"
+        exit 1
+    fi
 
-echo"<VirtualHost *:443>
+echo "<VirtualHost *:443>
   ServerName ${DOMAIN}
   ServerAlias www.${DOMAIN}
-  DocumentRoot /var/www/html/${USER}
+  DocumentRoot /var/www/html/${DOMAIN}
 
   <IfModule mod_suexec.c>
     SuexecUserGroup \"${USER}\" \"${USER}\"
@@ -101,21 +106,22 @@ echo"<VirtualHost *:443>
   # Etag
   FileETag None
 
-  <Directory /var/www/html/${USER}>
+  <Directory /var/www/html/${DOMAIN}>
    AllowOverride All
    Require all granted
 
    Options +FollowSymLinks -Indexes
   </Directory>
 
-  CustomLog /home/${USER}/log/access.log combined
-  ErrorLog /home/${USER}/log/error.log
+  CustomLog /home/${DOMAIN}/log/access.log combined
+  ErrorLog /home/${DOMAIN}/log/error.log
 </VirtualHost>
-<VirtualHost */80>
-    ServeurName ${DOMAIN}
-    ServeurAlias www.${DOMAIN}
+<VirtualHost *:80>
+    ServerName ${DOMAIN}
+    ServerAlias www.${DOMAIN}
 
     RedirectPermanent / https://www.${DOMAIN}/
+</VirtualHost>
 " > /etc/apache2/sites-available/${DOMAIN}.conf
 
     echo "Apache - Checking the Apache SSL configuration"
@@ -156,15 +162,15 @@ echo "/home/${DOMAIN}/log/*.log {
 }
 
 function createclone() {
-    echo -n "Repository URL: "
-    read REPO
-    if [ -z ${USER} ]; then
+    if [ -z ${REPO} ]; then
         echo "GitHub - no repo URL"
     else
         echo "GitHub - repo being cloned"
-	sudo -H -u bash -c '${USER} git -C /var/www/html/${DOMAIN}/ clone ${REPO}'
+	git clone ${REPO} /var/www/html/${DOMAIN}
         echo "GitHub - repo is cloned"
     fi
+    chown -R ${USER}: /var/www/html/${DOMAIN}
+    chown -R ${USER}: /home/${DOMAIN}/log
 }
 
 function main() {
