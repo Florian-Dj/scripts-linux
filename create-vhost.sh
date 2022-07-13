@@ -6,14 +6,14 @@
 # Update : 13/07/2022
 ###########################
 
-echo -n "Project name (user): "
-read PROJET
-USER=$( echo "${PROJET}" | cut -c1-30 )
-echo -n "Domain name (domain.extension): "
-read DOMAIN
 
 
 function usercreation(){
+    echo -n "Project name (user): "
+    read PROJET
+    USER=$( echo "${PROJET}" | cut -c1-30 )
+    echo -n "Domain name (domain.extension): "
+    read DOMAIN
     useradd -m -s /bin/bash -d /home/${DOMAIN} ${USER}
     echo "Creating the SSH key for GIT"
     sudo -H -u ${USER} bash -c 'ssh-keygen -t rsa -b 4096 -N "" -C "${USER}@${DOMAIN}" -f ~/.ssh/id_rsa -q -P ""'
@@ -131,6 +131,41 @@ echo"<VirtualHost *:443>
     /etc/init.d/apache2 reload > /dev/null 2>&1
 }
 
+function createlogrotate() {
+echo "/home/${DOMAIN}/log/*.log {
+        su ${USER} ${USER}
+        weekly
+        missingok
+        rotate 7
+        compress
+        delaycompress
+        notifempty
+        create 640 ${USER} ${USER}
+        sharedscripts
+        postrotate
+                if /etc/init.d/apache2 status > /dev/null ; then \\
+                /etc/init.d/apache2 reload > /dev/null; \\
+                fi;
+        endscript
+        prerotate
+                if [ -d /etc/logrotate.d/httpd-prerotate ]; then \\
+                        run-parts /etc/logrotate.d/httpd-prerotate; \\
+                fi; \\
+        endscript
+}" > /etc/logrotate.d/${DOMAIN}
+}
+
+function createclone() {
+    echo -n "Repository URL: "
+    read REPO
+    if [ -z ${USER} ]; then
+        echo "GitHub - no repo URL"
+    else
+        echo "GitHub - repo being cloned"
+	sudo -H -u bash -c '${USER} git -C /var/www/html/${DOMAIN}/ clone ${REPO}'
+        echo "GitHub - repo is cloned"
+    fi
+}
 
 function main() {
     echo "User creation"
@@ -144,6 +179,10 @@ function main() {
     echo "Logrotate creation"
     createlogrotate
     echo "Logrotate was created"
+
+    echo "GitHub - Clone creation"
+    createclone
+    echo "GitHub - Clone was created"
 }
 
 
