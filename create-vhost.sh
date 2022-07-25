@@ -3,7 +3,7 @@
 # Author : Florian DJERBI
 # Object : Environment creation
 # Create : 12/07/2022
-# Update : 13/07/2022
+# Update : 25/07/2022
 ###########################
 
 
@@ -14,6 +14,8 @@ echo -n "Domain name (domain.extension): "
 read DOMAIN
 echo -n "Repository URL: "
 read REPO
+echo -n "Choice branch repo: "
+read BRANCH
 
 
 function usercreation(){
@@ -166,7 +168,7 @@ function createclone() {
         echo "GitHub - no repo URL"
     else
         echo "GitHub - repo being cloned"
-	git clone ${REPO} /var/www/html/${DOMAIN}
+	git clone --branch ${BRANCH} ${REPO} /var/www/html/${DOMAIN}
         echo "GitHub - repo is cloned"
     fi
     chown -R ${USER}: /var/www/html/${DOMAIN}
