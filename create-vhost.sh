@@ -21,7 +21,7 @@ read BRANCH
 function usercreation(){
     useradd -m -s /bin/bash -d /home/${DOMAIN} ${USER}
     echo "Creating the SSH key for GIT"
-    sudo -H -u ${USER} bash -c 'ssh-keygen -t rsa -b 4096 -N "" -C "${USER}@${DOMAIN}" -f ~/.ssh/id_rsa -q -P ""'
+    sudo -H -u ${USER} bash -c 'ssh-keygen -t rsa -b 4096 -N "" -C "${USER}@web1.hedras.com" -f ~/.ssh/id_rsa -q -P ""'
     mkdir -p /var/www/html/${DOMAIN} /home/${DOMAIN}/log
     chown -R ${USER}: /var/www/html/${DOMAIN}
     chown -R ${USER}: /home/${DOMAIN}/log
