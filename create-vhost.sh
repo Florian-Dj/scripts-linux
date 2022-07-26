@@ -3,19 +3,50 @@
 # Author : Florian DJERBI
 # Object : Environment creation
 # Create : 12/07/2022
-# Update : 25/07/2022
+# Update : 26/07/2022
 ###########################
 
 
-echo -n "Project name (user): "
-read PROJET
-USER=$( echo "${PROJET}" | cut -c1-30 )
-echo -n "Domain name (domain.extension): "
-read DOMAIN
-echo -n "Repository URL: "
-read REPO
-echo -n "Choice branch repo: "
-read BRANCH
+function init(){
+    echo -n "Project name (user): "
+    read PROJET
+    USER=$( echo "${PROJET}" | cut -c1-30 )
+    echo -n "Domain name (domain.extension): "
+    read DOMAIN
+    echo -n "Repository URL: "
+    read REPO
+    echo -n "Choice branch repo: "
+    read BRANCH
+    index "$@"
+}
+
+
+function index() {
+    echo -n "Path to index webpage: 
+       1 - /
+       2 - /dist
+       3 - /public
+       4 - /web
+Your Choice (1-4): "
+    read CHOICE_INDEX
+    case ${CHOICE_INDEX} in
+        1)
+            PATH_INDEX="/"
+	    ;;
+        2)
+            PATH_INDEX="/dist"
+	    ;;
+        3)
+            PATH_INDEX="/public"
+	    ;;
+        4)
+            PATH_INDEX="/web"
+	    ;;
+        *)
+            index "$@"
+	    ;;
+    esac
+}
 
 
 function usercreation(){
@@ -83,7 +114,7 @@ echo "<VirtualHost *:80>
 echo "<VirtualHost *:443>
   ServerName ${DOMAIN}
   ServerAlias www.${DOMAIN}
-  DocumentRoot /var/www/html/${DOMAIN}
+  DocumentRoot /var/www/html/${DOMAIN}${PATH_INDEX}
 
   <IfModule mod_suexec.c>
     SuexecUserGroup \"${USER}\" \"${USER}\"
@@ -177,21 +208,21 @@ function createclone() {
 
 function main() {
     echo "User creation"
-    usercreation
+    usercreation "$@"
     echo "User has been created"
 
     echo "Apache - Vhost creation"
-    createvhost
+    createvhost "$@"
     echo "Apache - Vhost was created"
 
     echo "Logrotate creation"
-    createlogrotate
+    createlogrotate "$@"
     echo "Logrotate was created"
 
     echo "GitHub - Clone creation"
-    createclone
+    createclone "$@"
     echo "GitHub - Clone was created"
 }
 
-
+init "$@"
 main "$@"
