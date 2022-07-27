@@ -3,9 +3,20 @@
 # Author : Florian DJERBI
 # Object : Environment creation
 # Create : 12/07/2022
-# Update : 26/07/2022
+# Update : 27/07/2022
 ###########################
 
+
+function check_package(){
+    pkgs="git apache2 certbot"
+    for pkg in ${pkgs}; do
+        echo "${pkg}"
+        status="$(dpkg-query -W --showformat='${db:Status-Status}' "${pkg}" 2>&1)"
+            if [ ! $? = 0 ] || [ ! "${status}" = installed ]; then
+                apt install $pkgs
+            fi
+    done
+}
 
 function init(){
     echo -n "Project name (user): "
@@ -19,7 +30,6 @@ function init(){
     read BRANCH
     index "$@"
 }
-
 
 function index() {
     echo -n "Path to index webpage: 
@@ -206,7 +216,12 @@ function createclone() {
     chown -R ${USER}: /home/${DOMAIN}/log
 }
 
+
 function main() {
+
+    check_package "$@"
+    init "$@"
+
     echo "User creation"
     usercreation "$@"
     echo "User has been created"
@@ -224,5 +239,5 @@ function main() {
     echo "GitHub - Clone was created"
 }
 
-init "$@"
 main "$@"
+
