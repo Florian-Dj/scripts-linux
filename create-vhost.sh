@@ -3,19 +3,19 @@
 # Author : Florian DJERBI
 # Object : Environment creation
 # Create : 12/07/2022
-# Update : 27/07/2022
+# Update : 10/08/2022
 ###########################
 
 
 function check_package(){
     pkgs="git apache2 certbot"
     for pkg in ${pkgs}; do
-        echo "${pkg}"
         status="$(dpkg-query -W --showformat='${db:Status-Status}' "${pkg}" 2>&1)"
             if [ ! $? = 0 ] || [ ! "${status}" = installed ]; then
                 apt install $pkgs
             fi
     done
+    echo "Check package done !"
 }
 
 function init(){
