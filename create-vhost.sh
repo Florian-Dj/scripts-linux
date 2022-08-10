@@ -29,35 +29,45 @@ function init(){
     echo -n "Choice branch repo: "
     read BRANCH
     index "$@"
+    repo_update "$@"
 }
 
 function index() {
-    echo -n "Path to index webpage: 
+    while true; do
+        echo -n "Path to index webpage: 
        1 - /
        2 - /dist
        3 - /public
        4 - /web
 Your Choice (1-4): "
-    read CHOICE_INDEX
-    case ${CHOICE_INDEX} in
-        1)
-            PATH_INDEX="/"
-	    ;;
-        2)
-            PATH_INDEX="/dist"
-	    ;;
-        3)
-            PATH_INDEX="/public"
-	    ;;
-        4)
-            PATH_INDEX="/web"
-	    ;;
-        *)
-            index "$@"
-	    ;;
-    esac
+        read CHOICE_INDEX
+        case ${CHOICE_INDEX} in
+            1)
+                PATH_INDEX="/"
+    	    ;;
+            2)
+                PATH_INDEX="/dist"
+    	    ;;
+            3)
+                PATH_INDEX="/public"
+    	    ;;
+            4)
+                PATH_INDEX="/web"
+    	    ;;
+        esac
+    done
 }
 
+
+function repo_update(){
+    while true; do
+        read -p "Automatic update of the site from a repo ? (yes/no): " REPO_UPDATE
+        case $REPO_UPDATE in
+            [Yy]*) (crontab -l -u ${USER}; echo "*/5 * * * * git pull origin ${BRANCH}") | crontab -; break;;
+            [Nn]*) break;;
+        esac
+    done
+}
 
 function usercreation(){
     useradd -m -s /bin/bash -d /home/${DOMAIN} ${USER}
@@ -222,21 +232,21 @@ function main() {
     check_package "$@"
     init "$@"
 
-    echo "User creation"
-    usercreation "$@"
-    echo "User has been created"
+   # echo "User creation"
+   # usercreation "$@"
+   # echo "User has been created"
 
-    echo "Apache - Vhost creation"
-    createvhost "$@"
-    echo "Apache - Vhost was created"
+   # echo "Apache - Vhost creation"
+   # createvhost "$@"
+   # echo "Apache - Vhost was created"
 
-    echo "Logrotate creation"
-    createlogrotate "$@"
-    echo "Logrotate was created"
+   # echo "Logrotate creation"
+   # createlogrotate "$@"
+   # echo "Logrotate was created"
 
-    echo "GitHub - Clone creation"
-    createclone "$@"
-    echo "GitHub - Clone was created"
+   # echo "GitHub - Clone creation"
+   # createclone "$@"
+   # echo "GitHub - Clone was created"
 }
 
 main "$@"
