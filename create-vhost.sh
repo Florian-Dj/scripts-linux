@@ -232,21 +232,21 @@ function main() {
     check_package "$@"
     init "$@"
 
-   # echo "User creation"
-   # usercreation "$@"
-   # echo "User has been created"
+    echo "User creation"
+    usercreation "$@"
+    echo "User has been created"
 
-   # echo "Apache - Vhost creation"
-   # createvhost "$@"
-   # echo "Apache - Vhost was created"
+    echo "Apache - Vhost creation"
+    createvhost "$@"
+    echo "Apache - Vhost was created"
 
-   # echo "Logrotate creation"
-   # createlogrotate "$@"
-   # echo "Logrotate was created"
+    echo "Logrotate creation"
+    createlogrotate "$@"
+    echo "Logrotate was created"
 
-   # echo "GitHub - Clone creation"
-   # createclone "$@"
-   # echo "GitHub - Clone was created"
+    echo "GitHub - Clone creation"
+    createclone "$@"
+    echo "GitHub - Clone was created"
 }
 
 main "$@"
