@@ -3,7 +3,7 @@
 # Author : Florian DJERBI
 # Object : Environment creation
 # Create : 12/07/2022
-# Update : 10/08/2022
+# Update : 11/08/2022
 ###########################
 
 
@@ -19,17 +19,19 @@ function check_package(){
 }
 
 function init(){
-    echo -n "Project name (user): "
-    read PROJET
-    USER=$( echo "${PROJET}" | cut -c1-30 )
-    echo -n "Domain name (domain.extension): "
-    read DOMAIN
+    #echo -n "Project name (user): "
+    #read PROJET
+    #USER=$( echo "${PROJET}" | cut -c1-30 )
+    #echo -n "Domain name (domain.extension): "
+    #read DOMAIN
     echo -n "Repository URL: "
     read REPO
     echo -n "Choice branch repo: "
     read BRANCH
-    index "$@"
-    repo_update "$@"
+    echo "export REPO='${REPO}'" >> ~/.bashrc
+    echo "export BRANCH='${BRANCH}'" >> ~/.bashrc
+    #index "$@"
+    #repo_update "$@"
 }
 
 function index() {
@@ -63,18 +65,18 @@ function repo_update(){
     while true; do
         read -p "Automatic update of the site from a repo ? (yes/no): " REPO_UPDATE
         case $REPO_UPDATE in
-            [Yy]*) (crontab -l -u ${USER}; echo "*/5 * * * * git pull origin ${BRANCH}") | crontab -; break;;
+            [Yy]*) (crontab -l -u ${USER}; echo "cd /var/www/${DOMAIN} && */5 * * * * git pull origin ${BRANCH}") | crontab -; break;;
             [Nn]*) break;;
         esac
     done
 }
 
 function usercreation(){
-    useradd -m -s /bin/bash -d /home/${DOMAIN} ${USER}
-    echo "Creating the SSH key for GIT"
+    echo "Creating user, home directory and SSH key"
+    useradd -m -s /bin/bash -d /var/www/${DOMAIN} ${USER}
+    mkdir -p /home/${DOMAIN}/log
     sudo -H -u ${USER} bash -c 'ssh-keygen -t rsa -b 4096 -N "" -C "${USER}@web1.hedras.com" -f ~/.ssh/id_rsa -q -P ""'
-    mkdir -p /var/www/html/${DOMAIN} /home/${DOMAIN}/log
-    chown -R ${USER}: /var/www/html/${DOMAIN}
+    chown -R ${USER}: /var/www/${DOMAIN}
     chown -R ${USER}: /home/${DOMAIN}/log
 }
 
@@ -82,7 +84,7 @@ function createvhost(){
 echo "<VirtualHost *:80>
   ServerName ${DOMAIN}
   ServerAlias www.${DOMAIN}
-  DocumentRoot /var/www/html/${DOMAIN}
+  DocumentRoot /var/www/${DOMAIN}
 
   <IfModule mod_suexec.c>
     SuexecUserGroup \"${USER}\" \"${USER}\"
@@ -98,7 +100,7 @@ echo "<VirtualHost *:80>
   # Etag
   FileETag None
 
-  <Directory /var/www/html/${DOMAIN}>
+  <Directory /var/www/${DOMAIN}>
    AllowOverride All
    Require all granted
 
@@ -134,7 +136,7 @@ echo "<VirtualHost *:80>
 echo "<VirtualHost *:443>
   ServerName ${DOMAIN}
   ServerAlias www.${DOMAIN}
-  DocumentRoot /var/www/html/${DOMAIN}${PATH_INDEX}
+  DocumentRoot /var/www/${DOMAIN}${PATH_INDEX}
 
   <IfModule mod_suexec.c>
     SuexecUserGroup \"${USER}\" \"${USER}\"
@@ -159,7 +161,7 @@ echo "<VirtualHost *:443>
   # Etag
   FileETag None
 
-  <Directory /var/www/html/${DOMAIN}>
+  <Directory /var/www/${DOMAIN}>
    AllowOverride All
    Require all granted
 
@@ -219,10 +221,10 @@ function createclone() {
         echo "GitHub - no repo URL"
     else
         echo "GitHub - repo being cloned"
-	git clone --branch ${BRANCH} ${REPO} /var/www/html/${DOMAIN}
+	git clone --branch ${BRANCH} ${REPO} /var/www/${DOMAIN}
         echo "GitHub - repo is cloned"
     fi
-    chown -R ${USER}: /var/www/html/${DOMAIN}
+    chown -R ${USER}: /var/www/${DOMAIN}
     chown -R ${USER}: /home/${DOMAIN}/log
 }
 
@@ -232,21 +234,21 @@ function main() {
     check_package "$@"
     init "$@"
 
-    echo "User creation"
-    usercreation "$@"
-    echo "User has been created"
+    #echo "User creation"
+    #usercreation "$@"
+    #echo "User has been created"
 
-    echo "Apache - Vhost creation"
-    createvhost "$@"
-    echo "Apache - Vhost was created"
+    #echo "Apache - Vhost creation"
+    #createvhost "$@"
+    #echo "Apache - Vhost was created"
 
-    echo "Logrotate creation"
-    createlogrotate "$@"
-    echo "Logrotate was created"
+    #echo "Logrotate creation"
+    #createlogrotate "$@"
+    #echo "Logrotate was created"
 
-    echo "GitHub - Clone creation"
-    createclone "$@"
-    echo "GitHub - Clone was created"
+    #echo "GitHub - Clone creation"
+    #createclone "$@"
+    #echo "GitHub - Clone was created"
 }
 
 main "$@"
