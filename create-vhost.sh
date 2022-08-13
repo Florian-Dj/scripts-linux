@@ -3,7 +3,7 @@
 # Author : Florian DJERBI
 # Object : Environment creation
 # Create : 12/07/2022
-# Update : 11/08/2022
+# Update : 13/08/2022
 ###########################
 
 
@@ -19,22 +19,16 @@ function check_package(){
 }
 
 function init(){
-    #echo -n "Project name (user): "
-    #read PROJET
-    #USER=$( echo "${PROJET}" | cut -c1-30 )
-    #echo -n "Domain name (domain.extension): "
-    #read DOMAIN
+    echo -n "Project name (user): "
+    read PROJET
+    USER=$( echo "${PROJET}" | cut -c1-30 )
+    echo -n "Domain name (domain.extension): "
+    read DOMAIN
     echo -n "Repository URL: "
     read REPO
     echo -n "Choice branch repo: "
     read BRANCH
-    echo "export REPO='${REPO}'" >> ~/.bashrc
-    echo "export BRANCH='${BRANCH}'" >> ~/.bashrc
-    #index "$@"
-    #repo_update "$@"
-}
 
-function index() {
     while true; do
         echo -n "Path to index webpage: 
        1 - /
@@ -44,28 +38,17 @@ function index() {
 Your Choice (1-4): "
         read CHOICE_INDEX
         case ${CHOICE_INDEX} in
-            1)
-                PATH_INDEX="/"
-    	    ;;
-            2)
-                PATH_INDEX="/dist"
-    	    ;;
-            3)
-                PATH_INDEX="/public"
-    	    ;;
-            4)
-                PATH_INDEX="/web"
-    	    ;;
+            1) PATH_INDEX="/"; break;;
+            2) PATH_INDEX="/dist"; break;;
+            3) PATH_INDEX="/public"; break;;
+            4) PATH_INDEX="/web"; break;;
         esac
     done
-}
 
-
-function repo_update(){
     while true; do
         read -p "Automatic update of the site from a repo ? (yes/no): " REPO_UPDATE
         case $REPO_UPDATE in
-            [Yy]*) (crontab -l -u ${USER}; echo "cd /var/www/${DOMAIN} && */5 * * * * git pull origin ${BRANCH}") | crontab -; break;;
+            [Yy]*) break;;
             [Nn]*) break;;
         esac
     done
@@ -73,11 +56,14 @@ function repo_update(){
 
 function usercreation(){
     echo "Creating user, home directory and SSH key"
-    useradd -m -s /bin/bash -d /var/www/${DOMAIN} ${USER}
-    mkdir -p /home/${DOMAIN}/log
+    useradd -m -s /bin/bash -d /home/${DOMAIN} ${USER}
     sudo -H -u ${USER} bash -c 'ssh-keygen -t rsa -b 4096 -N "" -C "${USER}@web1.hedras.com" -f ~/.ssh/id_rsa -q -P ""'
+    mkdir -p /home/${DOMAIN}/log /var/www/${DOMAIN}
     chown -R ${USER}: /var/www/${DOMAIN}
     chown -R ${USER}: /home/${DOMAIN}/log
+    echo "cd /var/www/${DOMAIN} && */5 * * * * git pull origin ${BRANCH}" >> /var/spool/cron/crontabs/${USER}
+   # echo "export REPO='${REPO}'" >> ~/.bashrc
+   # echo "export BRANCH='${BRANCH}'" >> ~/.bashrc
 }
 
 function createvhost(){
@@ -124,7 +110,7 @@ echo "<VirtualHost *:80>
     echo "Apache - config reload"
     /etc/init.d/apache2 reload > /dev/null 2>&1
 
-    certbot certonly --non-interactive --email floriandjerbi@gmail.com --agree-tos --expand --webroot --webroot-path /var/www/html/${DOMAIN} --domain ${DOMAIN} --domain www.${DOMAIN}   > /dev/null 2>&1
+    certbot certonly --non-interactive --email floriandjerbi@gmail.com --agree-tos --expand --webroot --webroot-path /var/www/${DOMAIN} --domain ${DOMAIN} --domain www.${DOMAIN}   > /dev/null 2>&1
     RESULT=$?
     if [ $RESULT -eq 0 ]; then
         echo "Apache - SSL create"
@@ -225,7 +211,6 @@ function createclone() {
         echo "GitHub - repo is cloned"
     fi
     chown -R ${USER}: /var/www/${DOMAIN}
-    chown -R ${USER}: /home/${DOMAIN}/log
 }
 
 
@@ -234,21 +219,21 @@ function main() {
     check_package "$@"
     init "$@"
 
-    #echo "User creation"
-    #usercreation "$@"
-    #echo "User has been created"
+    echo "User creation"
+    usercreation "$@"
+    echo "User has been created"
 
-    #echo "Apache - Vhost creation"
-    #createvhost "$@"
-    #echo "Apache - Vhost was created"
+    echo "Apache - Vhost creation"
+    createvhost "$@"
+    echo "Apache - Vhost was created"
 
-    #echo "Logrotate creation"
-    #createlogrotate "$@"
-    #echo "Logrotate was created"
+    echo "Logrotate creation"
+    createlogrotate "$@"
+    echo "Logrotate was created"
 
-    #echo "GitHub - Clone creation"
-    #createclone "$@"
-    #echo "GitHub - Clone was created"
+    echo "GitHub - Clone creation"
+    createclone "$@"
+    echo "GitHub - Clone was created"
 }
 
 main "$@"
