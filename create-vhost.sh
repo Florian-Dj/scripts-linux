@@ -78,8 +78,10 @@ function usercreation(){
     mkdir -p /home/${DOMAIN}/log /var/www/${DOMAIN}
     chown -R ${USER}: /var/www/${DOMAIN}
     chown -R ${USER}: /home/${DOMAIN}/log
-    echo "cd /var/www/${DOMAIN} && */5 * * * * git pull origin ${BRANCH} > /dev/null 2>&1" >> /var/spool/cron/crontabs/${USER}
     printf "\nexport REPO='${REPO}'\nexport BRANCH='${BRANCH}'\n" >> /home/lunia-lightex.mucral.com/.bashrc
+    if ${REPO_UPDATE} ; then
+        echo "cd /var/www/${DOMAIN} && */5 * * * * git pull origin ${BRANCH} > /dev/null 2>&1" >> /var/spool/cron/crontabs/${USER}
+    fi
 }
 
 function createvhost(){
