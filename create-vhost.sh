@@ -8,7 +8,7 @@
 
 
 function check_package(){
-    pkgs="git apache2 certbot"
+    pkgs="git apache2 certbot jq"
     for pkg in ${pkgs}; do
         status="$(dpkg-query -W --showformat='${db:Status-Status}' "${pkg}" 2>&1)"
             if [ ! $? = 0 ] || [ ! "${status}" = installed ]; then
@@ -26,8 +26,25 @@ function init(){
     read DOMAIN
     echo -n "Repository URL: "
     read REPO
-    echo -n "Choice branch repo: "
-    read BRANCH
+
+    URL_API=(https://api.github.com/repos/$(echo ${REPO} |sed 's|https://github.com/||')/branches)
+    echo "List of branch available"
+    branches=()
+    while read branch; do
+        branches+=(${branch})
+    done< <(curl -s ${URL_API} |jq '.[].name' | tr -d '"')
+    while true; do
+        nb=1
+        for branch in ${branches[@]}; do
+            echo "  - ${nb}: ${branch}"
+	    ((nb+=1))
+        done
+        echo -n "Choice branch repo (1-${#branches[@]}): "
+        read NB_BRANCH
+        if [ ${NB_BRANCH} -ge 1 ] && [ ${NB_BRANCH} -le ${#branches[@]} ]; then
+	    BRANCH=(${branches[${NB_BRANCH}-1]}); break
+        fi
+    done
 
     while true; do
         echo -n "Path to index webpage: 
