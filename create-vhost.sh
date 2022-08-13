@@ -61,9 +61,8 @@ function usercreation(){
     mkdir -p /home/${DOMAIN}/log /var/www/${DOMAIN}
     chown -R ${USER}: /var/www/${DOMAIN}
     chown -R ${USER}: /home/${DOMAIN}/log
-    echo "cd /var/www/${DOMAIN} && */5 * * * * git pull origin ${BRANCH}" >> /var/spool/cron/crontabs/${USER}
-   # echo "export REPO='${REPO}'" >> ~/.bashrc
-   # echo "export BRANCH='${BRANCH}'" >> ~/.bashrc
+    echo "cd /var/www/${DOMAIN} && */5 * * * * git pull origin ${BRANCH} > /dev/null 2>&1" >> /var/spool/cron/crontabs/${USER}
+    printf "\nexport REPO='${REPO}'\nexport BRANCH='${BRANCH}'\n" >> /home/lunia-lightex.mucral.com/.bashrc
 }
 
 function createvhost(){
@@ -97,7 +96,7 @@ echo "<VirtualHost *:80>
   ErrorLog /home/${DOMAIN}/log/error.log
 </VirtualHost>
 " > /etc/apache2/sites-available/${DOMAIN}.conf
-    /usr/sbin/a2ensite ${DOMAIN}.conf
+    /usr/sbin/a2ensite ${DOMAIN}.conf > /dev/null 2>&1
     echo "Apache - Checking the Apache configuration"
     /usr/sbin/apache2ctl configtest > /dev/null 2>&1
     RESULT=$?
@@ -207,7 +206,7 @@ function createclone() {
         echo "GitHub - no repo URL"
     else
         echo "GitHub - repo being cloned"
-	git clone --branch ${BRANCH} ${REPO} /var/www/${DOMAIN}
+	git clone --branch ${BRANCH} ${REPO} /var/www/${DOMAIN} > /dev/null 2>&1
         echo "GitHub - repo is cloned"
     fi
     chown -R ${USER}: /var/www/${DOMAIN}
