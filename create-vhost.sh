@@ -3,7 +3,7 @@
 # Author : Florian DJERBI
 # Object : Environment creation
 # Create : 12/07/2022
-# Update : 13/08/2022
+# Update : 14/08/2022
 ###########################
 
 
@@ -65,8 +65,16 @@ Your Choice (1-4): "
     while true; do
         read -p "Automatic update of the site from a repo ? (yes/no): " REPO_UPDATE
         case $REPO_UPDATE in
-            [Yy]*) break;;
-            [Nn]*) break;;
+            [Yy]*) REPO_UPDATE=true; break;;
+            [Nn]*) REPO_UPDATE=false; break;;
+        esac
+    done
+
+    while true; do
+        read -p "Create SSL certificates ? (yes/no): " SSL
+        case $SSL in
+            [Yy]*) SSL=true; break;;
+            [Nn]*) SSL=false; break;;
         esac
     done
 }
@@ -79,7 +87,7 @@ function usercreation(){
     chown -R ${USER}: /var/www/${DOMAIN}
     chown -R ${USER}: /home/${DOMAIN}/log
     printf "\nexport REPO='${REPO}'\nexport BRANCH='${BRANCH}'\n" >> /home/lunia-lightex.mucral.com/.bashrc
-    if ${REPO_UPDATE} ; then
+    if [ "${REPO_UPDATE}" = true ] ; then
         echo "cd /var/www/${DOMAIN} && */5 * * * * git pull origin ${BRANCH} > /dev/null 2>&1" >> /var/spool/cron/crontabs/${USER}
     fi
 }
@@ -127,7 +135,9 @@ echo "<VirtualHost *:80>
     fi
     echo "Apache - config reload"
     /etc/init.d/apache2 reload > /dev/null 2>&1
-    ssl-create "$@"
+    if [ "${SSL}" = true ]; then
+        ssl-create "$@"
+    fi
 }
 
 function ssl-create(){
