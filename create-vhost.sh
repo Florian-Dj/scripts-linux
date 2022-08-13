@@ -125,7 +125,10 @@ echo "<VirtualHost *:80>
     fi
     echo "Apache - config reload"
     /etc/init.d/apache2 reload > /dev/null 2>&1
+    ssl-create "$@"
+}
 
+function ssl-create(){
     certbot certonly --non-interactive --email floriandjerbi@gmail.com --agree-tos --expand --webroot --webroot-path /var/www/${DOMAIN} --domain ${DOMAIN} --domain www.${DOMAIN}   > /dev/null 2>&1
     RESULT=$?
     if [ $RESULT -eq 0 ]; then
