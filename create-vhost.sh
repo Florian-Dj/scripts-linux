@@ -96,7 +96,7 @@ function createvhost(){
 echo "<VirtualHost *:80>
   ServerName ${DOMAIN}
   ServerAlias www.${DOMAIN}
-  DocumentRoot /var/www/${DOMAIN}
+  DocumentRoot /var/www/${DOMAIN}${PATH_INDEX}
 
   <IfModule mod_suexec.c>
     SuexecUserGroup \"${USER}\" \"${USER}\"
