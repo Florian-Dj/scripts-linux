@@ -62,7 +62,7 @@ function init(){
     while true; do
         nb=1
         for branch in ${branches[@]}; do
-            echo "  - ${nb}: ${branch}"
+            echo "  ${nb} - ${branch}"
 	    ((nb+=1))
         done
         echo -n "Choice branch repo (1-${#branches[@]}): "
@@ -74,10 +74,10 @@ function init(){
 
     while true; do
         echo -n "Path to index webpage: 
-       1 - /
-       2 - /dist
-       3 - /public
-       4 - /web
+  1 - /
+  2 - /dist
+  3 - /public
+  4 - /web
 Your Choice (1-4): "
         read CHOICE_INDEX
         case ${CHOICE_INDEX} in
