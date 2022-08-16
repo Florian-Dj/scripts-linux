@@ -3,8 +3,30 @@
 # Author : Florian DJERBI
 # Object : Environment creation
 # Create : 12/07/2022
-# Update : 14/08/2022
+# Update : 16/08/2022
 ###########################
+PATH=/usr/sbin:/usr/bin:/sbin:/bin
+
+#
+# VARIABLES
+#
+_reset='\033[0m'
+_red='\033[0;31m'
+_green='\033[0;32m'
+
+
+#
+# FUNCTIONS
+#
+
+function _success()
+{
+    printf "${_green}✔ %s${_reset}\n" "$@"
+}
+
+function _error() {
+    printf "${_red}✖ %s${_reset}\n" "$@"
+}
 
 
 function check_package(){
@@ -267,5 +289,6 @@ function main() {
     echo "GitHub - Clone was created"
 }
 
-main "$@"
+#main "$@"
+_success "Test"
 
