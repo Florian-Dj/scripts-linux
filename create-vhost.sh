@@ -13,12 +13,12 @@ PATH=/usr/sbin:/usr/bin:/sbin:/bin
 _reset='\033[0m'
 _red='\033[0;31m'
 _green='\033[0;32m'
+_cyan='\033[0;36m'
 
 
 #
 # FUNCTIONS
 #
-
 function _success()
 {
     printf "${_green}✔ %s${_reset}\n" "$@"
@@ -26,6 +26,10 @@ function _success()
 
 function _error() {
     printf "${_red}✖ %s${_reset}\n" "$@"
+}
+
+function _info() {
+    printf "${_cyan}▬ %s${_reset}\n" "$@"
 }
 
 
@@ -37,7 +41,7 @@ function check_package(){
                 apt install $pkgs
             fi
     done
-    echo "Check package done !"
+    _success "Check package done !"
 }
 
 function init(){
@@ -102,7 +106,7 @@ Your Choice (1-4): "
 }
 
 function usercreation(){
-    echo "Creating user, home directory and SSH key"
+    _info "Creating user, home directory and SSH key"
     useradd -m -s /bin/bash -d /home/${DOMAIN} ${USER}
     sudo -H -u ${USER} bash -c 'ssh-keygen -t rsa -b 4096 -N "" -C "${USER}@web1.hedras.com" -f ~/.ssh/id_rsa -q -P ""'
     mkdir -p /home/${DOMAIN}/log /var/www/${DOMAIN}
@@ -146,16 +150,16 @@ echo "<VirtualHost *:80>
 </VirtualHost>
 " > /etc/apache2/sites-available/${DOMAIN}.conf
     /usr/sbin/a2ensite ${DOMAIN}.conf > /dev/null 2>&1
-    echo "Apache - Checking the Apache configuration"
+    _info "Apache - Checking the Apache configuration"
     /usr/sbin/apache2ctl configtest > /dev/null 2>&1
     RESULT=$?
     if [ $RESULT -eq 0 ]; then
-        echo "Apache - configtest OK"
+        _success "Apache - configtest OK"
     else
-        echo "Apache - configtest failed"
+        _error "Apache - configtest failed"
         exit 1
     fi
-    echo "Apache - config reload"
+    _success "Apache - config reload"
     /etc/init.d/apache2 reload > /dev/null 2>&1
     if [ "${SSL}" = true ]; then
         ssl-create "$@"
@@ -166,9 +170,9 @@ function ssl-create(){
     certbot certonly --non-interactive --email floriandjerbi@gmail.com --agree-tos --expand --webroot --webroot-path /var/www/${DOMAIN} --domain ${DOMAIN} --domain www.${DOMAIN}   > /dev/null 2>&1
     RESULT=$?
     if [ $RESULT -eq 0 ]; then
-        echo "Apache - SSL create"
+        _success "Apache - SSL create"
     else
-        echo "Apache - SSL fail"
+        _error "Apache - SSL fail"
         exit 1
     fi
 
@@ -218,16 +222,16 @@ echo "<VirtualHost *:443>
 </VirtualHost>
 " > /etc/apache2/sites-available/${DOMAIN}.conf
 
-    echo "Apache - Checking the Apache SSL configuration"
+    _info "Apache - Checking the Apache SSL configuration"
     /usr/sbin/apache2ctl configtest > /dev/null 2>&1
     RESULT=$?
     if [ $RESULT -eq 0 ]; then
-        echo "Apache - configtest OK"
+        _success "Apache - configtest OK"
     else
-        echo "Apache - configtest failed"
+        _error "Apache - configtest failed"
         exit 1
     fi
-    echo "Apache - config reload"
+    _info "Apache - config reload"
     /etc/init.d/apache2 reload > /dev/null 2>&1
 }
 
@@ -257,11 +261,11 @@ echo "/home/${DOMAIN}/log/*.log {
 
 function createclone() {
     if [ -z ${REPO} ]; then
-        echo "GitHub - no repo URL"
+        _error "GitHub - no repo URL"
     else
-        echo "GitHub - repo being cloned"
+        _info "GitHub - repo being cloned"
 	git clone --branch ${BRANCH} ${REPO} /var/www/${DOMAIN} > /dev/null 2>&1
-        echo "GitHub - repo is cloned"
+        _success "GitHub - repo is cloned"
     fi
     chown -R ${USER}: /var/www/${DOMAIN}
 }
@@ -272,23 +276,22 @@ function main() {
     check_package "$@"
     init "$@"
 
-    echo "User creation"
+    _info "User creation"
     usercreation "$@"
-    echo "User has been created"
+    _success "User has been created"
 
-    echo "Apache - Vhost creation"
+    _info "Apache - Vhost creation"
     createvhost "$@"
-    echo "Apache - Vhost was created"
+    _success "Apache - Vhost was created"
 
-    echo "Logrotate creation"
+    _info "Logrotate creation"
     createlogrotate "$@"
-    echo "Logrotate was created"
+    _success "Logrotate was created"
 
-    echo "GitHub - Clone creation"
+    _info "GitHub - Clone creation"
     createclone "$@"
-    echo "GitHub - Clone was created"
+    _success "GitHub - Clone was created"
 }
 
-#main "$@"
-_success "Test"
+main "$@"
 
