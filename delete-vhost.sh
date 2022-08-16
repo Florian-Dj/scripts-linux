@@ -7,10 +7,27 @@
 ###########################
 
 
+#
+# FUNCTIONS
+#
+
 function main() {
-    for user in $(awk -F: '{printf "%s:%s\n",$1,$3}' /etc/passwd  | egrep ':[0-9]{4}$'); do
-        echo "  - ${user}"
-    done
+    BRANCH=$(sudo -H -u ${USER} bash -c "echo ${BRANCH}")
+    REPO=$(sudo -H -u ${USER} bash -c "echo ${REPO}")
+    DOMAIN=$(sudo -H -u ${USER} bash -c "echo ${DOMAIN}")
+    echo "${USER}, ${DOMAIN}, ${REPO}, ${BRANCH}"
 }
 
-main "@"
+while true; do
+    for user in $(awk -F: '{if (65000 > $3 && $3 > 1000) {print $1}}' /etc/passwd); do
+        echo "  - ${user}"
+    done
+    echo -n "Choice user delete: "
+    read USER
+    getent passwd ${USER} > /dev/null 2>&1
+    RES=$?
+    if [ ${RES} -eq 0 ]; then
+        main "${USER}"; break;
+    fi
+done
+
