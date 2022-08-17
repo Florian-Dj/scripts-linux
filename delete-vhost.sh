@@ -33,7 +33,7 @@ function init(){
 
 function verification(){
     while true; do
-        echo -n "Are you sure to delete ${USER}: "
+        echo -n "Are you sure to delete ${USER}? (yes/no): "
 	read DELETE
 	case ${DELETE} in
             [Yy]*) delete_user "$USER"; break;;
@@ -46,14 +46,15 @@ function delete_user(){
     BRANCH=$(sudo -Hiu ${USER} bash -c 'echo "${BRANCH}"')
     REPO=$(sudo -Hiu ${USER} bash -c 'echo "${REPO}"')
     DOMAIN=$(sudo -Hiu ${USER} bash -c 'echo "${DOMAIN}"')
-    userdel -r ${USER}
-    rm /etc/logrotate.d/${DOMAIN}
-    rm -r /var/www/${DOMAIN}
-    rm /var/spool/cron/crontabs/${USER}
-    rm /etc/apache2/site-available/${DOMAIN}.conf
-    rm /etc/apache2/site-enabled/${DOMAIN}.conf
-    rm -r /etc/letsencrypt/live/${DOMAIN}
-    echo "${USER}, ${DOMAIN}, ${REPO}, ${BRANCH}"
+    if [ ! -z "${BRANCH}" ] && [ ! -z "${REPO}" ] && [ ! -z "${DOMAIN}" ]; then
+        userdel -r ${USER}
+        rm /etc/logrotate.d/${DOMAIN}
+        rm -r /var/www/${DOMAIN}
+        rm /var/spool/cron/crontabs/${USER}
+        rm /etc/apache2/sites-available/${DOMAIN}.conf
+        rm /etc/apache2/sites-enabled/${DOMAIN}.conf
+        rm -r /etc/letsencrypt/live/${DOMAIN}
+    fi
 }
 
 main "$@"
