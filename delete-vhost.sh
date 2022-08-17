@@ -46,6 +46,13 @@ function delete_user(){
     BRANCH=$(sudo -Hiu ${USER} bash -c 'echo "${BRANCH}"')
     REPO=$(sudo -Hiu ${USER} bash -c 'echo "${REPO}"')
     DOMAIN=$(sudo -Hiu ${USER} bash -c 'echo "${DOMAIN}"')
+    userdel -r ${USER}
+    rm /etc/logrotate.d/${DOMAIN}
+    rm -r /var/www/${DOMAIN}
+    rm /var/spool/cron/crontabs/${USER}
+    rm /etc/apache2/site-available/${DOMAIN}.conf
+    rm /etc/apache2/site-enabled/${DOMAIN}.conf
+    rm -r /etc/letsencrypt/live/${DOMAIN}
     echo "${USER}, ${DOMAIN}, ${REPO}, ${BRANCH}"
 }
 
