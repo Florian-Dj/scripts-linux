@@ -3,16 +3,45 @@
 # Author : Florian DJERBI
 # Object : Environment deleted
 # Create : 16/08/2022
-# Update : 17/08/2022
+# Update : 20/08/2022
 ###########################
+
+
+#
+# VARIABLES
+#
+_reset='\033[0m'
+_red='\033[0;31m'
+_green='\033[0;32m'
+_cyan='\033[0;36m'
 
 
 #
 # FUNCTIONS
 #
+function _success()
+{
+    printf "${_green}✔ %s${_reset}\n" "$@"
+}
+
+function _error() {
+    printf "${_red}✖ %s${_reset}\n" "$@"
+}
+
+function _info() {
+    printf "${_cyan}▬ %s${_reset}\n" "$@"
+}
+
 
 function main() {
+    check_folder "$@"
     init "$@"
+}
+
+function check_folder(){
+    if [ ! -d /data/backup ];then
+        mkdir -p /data/backup
+    fi
 }
 
 function init(){
@@ -25,27 +54,41 @@ function init(){
         getent passwd ${USER} > /dev/null 2>&1
         RES=$?
         if [ ${RES} -eq 0 ]; then
-            verification "${USER}"; break;
+            BRANCH=$(sudo -Hiu ${USER} bash -c 'echo "${BRANCH}"')
+            REPO=$(sudo -Hiu ${USER} bash -c 'echo "${REPO}"')
+            DOMAIN=$(sudo -Hiu ${USER} bash -c 'echo "${DOMAIN}"')
+            verification "$@"
+            break
         fi
     done
 }
 
 
+function archive(){
+    echo "${BRANCH} ${REPO} ${DOMAIN}"
+}
+
+
 function verification(){
     while true; do
-        echo -n "Are you sure to delete ${USER}? (yes/no): "
-	read DELETE
-	case ${DELETE} in
-            [Yy]*) delete_user "$USER"; break;;
+        echo -n "Do you want to archive the projetct ? (yes/no): "
+	read ARCHIVE
+	case ${ARCHIVE} in
+            [Yy]*) archive "$@"; break;;
             [Nn]*) exit 1;;
         esac
     done
+    #while true; do
+    #    echo -n "Are you sure to delete ${USER}? (yes/no): "
+    #    read DELETE
+    #    case ${DELETE} in
+    #        [Yy]*) delete_user "$USER"; break;;
+    #        [Nn]*) exit 1;;
+    #    esac
+    #done
 }
 
 function delete_user(){
-    BRANCH=$(sudo -Hiu ${USER} bash -c 'echo "${BRANCH}"')
-    REPO=$(sudo -Hiu ${USER} bash -c 'echo "${REPO}"')
-    DOMAIN=$(sudo -Hiu ${USER} bash -c 'echo "${DOMAIN}"')
     if [ ! -z "${BRANCH}" ] && [ ! -z "${REPO}" ] && [ ! -z "${DOMAIN}" ]; then
         userdel -r ${USER}
         rm /etc/logrotate.d/${DOMAIN}
