@@ -3,7 +3,7 @@
 # Author : Florian DJERBI
 # Object : Environment creation
 # Create : 12/07/2022
-# Update : 16/08/2022
+# Update : 20/08/2022
 ###########################
 PATH=/usr/sbin:/usr/bin:/sbin:/bin
 
@@ -112,7 +112,7 @@ function usercreation(){
     mkdir -p /home/${DOMAIN}/log /var/www/${DOMAIN}
     chown -R ${USER}: /var/www/${DOMAIN}
     chown -R ${USER}: /home/${DOMAIN}/log
-    printf "\nexport REPO='${REPO}'\nexport BRANCH='${BRANCH}'\nexport DOMAIN='${DOMAIN}'\n" >> /home/${DOMAIN}/.bashrc
+    printf "\nexport REPO='${REPO}'\nexport BRANCH='${BRANCH}'\nexport DOMAIN='${DOMAIN}'\n" >> /home/${DOMAIN}/.profile
     if [ "${REPO_UPDATE}" = true ] ; then
         echo "cd /var/www/${DOMAIN} && */5 * * * * git pull origin ${BRANCH} > /dev/null 2>&1" >> /var/spool/cron/crontabs/${USER}
     fi
