@@ -63,42 +63,55 @@ function init(){
     done
 }
 
-
-function archive(){
-    if [ ! -z "${BRANCH}" ] && [ ! -z "${REPO}" ] && [ ! -z "${DOMAIN}" ]; then
-        tar -zcvf /data/backup/${DOMAIN}-${USER}-${BRANCH}.tar.gz /etc/logrotate.d/${DOMAIN} /var/www/${DOMAIN} /var/spool/cron/crontabs/${USER} /etc/apache2/sites-available/${DOMAIN}.conf /etc/apache2/sites-enabled/${DOMAIN}.conf /etc/letsencrypt/live/${DOMAIN} > /dev/null 2>&1
-    fi
-}
-
-
 function verification(){
     while true; do
         echo -n "Do you want to archive the projetct ? (yes/no): "
 	read ARCHIVE
 	case ${ARCHIVE} in
-            [Yy]*) archive "$@"; break;;
-            [Nn]*) exit 1;;
+            [Yy]*) break;;
+            [Nn]*) break;;
         esac
     done
     while true; do
         echo -n "Are you sure to delete ${USER}? (yes/no): "
         read DELETE
         case ${DELETE} in
-            [Yy]*) delete_user "$USER"; break;;
-            [Nn]*) exit 1;;
+            [Yy]*) break;;
+            [Nn]*) break;;
         esac
     done
+    if [[ "${ARCHIVE}" =~ [Yy]* ]]; then
+        archive "$@"
+    fi
+    if [[ "${DELETE}" =~ [Yy]* ]]; then
+        delete_user "$@"
+    fi
+}
+
+function archive(){
+    if [ ! -z "${BRANCH}" ] && [ ! -z "${REPO}" ] && [ ! -z "${DOMAIN}" ]; then
+        _info "Archive creation"
+        tar -zcvf /data/backup/${DOMAIN}-${USER}-${BRANCH}.tar.gz /etc/logrotate.d/${DOMAIN} /var/www/${DOMAIN} /var/spool/cron/crontabs/${USER} /etc/apache2/sites-available/${DOMAIN}.conf /etc/apache2/sites-enabled/${DOMAIN}.conf /etc/letsencrypt/live/${DOMAIN} > /dev/null 2>&1
+        _success "Archive done!"
+    else
+        _error "Archive error!"
+	exit 1
+    fi
 }
 
 function delete_user(){
     if [ ! -z "${BRANCH}" ] && [ ! -z "${REPO}" ] && [ ! -z "${DOMAIN}" ]; then
-        userdel -r ${USER}
+        _info "Start of user ${USER} deletion"
+        userdel -r ${USER} > /dev/null 2>&1
         rm /etc/logrotate.d/${DOMAIN}
         rm -r /var/www/${DOMAIN}
         rm /var/spool/cron/crontabs/${USER}
         rm /etc/apache2/sites-available/${DOMAIN}.conf
         rm /etc/apache2/sites-enabled/${DOMAIN}.conf
-        rm -r /etc/letsencrypt/live/${DOMAIN}
+        rm -r /etc/letsencrypt/live/${DOMAIN} > /dev/null 2>&1
+	_success "User ${USER} to delete"
+    else
+        _erorr "User delete error!"
     fi
 }
 
