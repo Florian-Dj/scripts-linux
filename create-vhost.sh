@@ -54,23 +54,31 @@ function init(){
     read REPO
 
     URL_API=(https://api.github.com/repos/$(echo ${REPO} |sed 's|https://github.com/||')/branches)
-    echo "List of branch available"
-    branches=()
-    while read branch; do
-        branches+=(${branch})
-    done< <(curl -s ${URL_API} |jq '.[].name' | tr -d '"')
-    while true; do
-        nb=1
-        for branch in ${branches[@]}; do
-            echo "  ${nb} - ${branch}"
-	    ((nb+=1))
+    nb_branch=$(curl -s ${URL_API} |jq -r '. | length')
+    if [ $nb_branch = 1 ];then
+        BRANCH=$(curl -s ${URL_API} |jq '.[0].name' |tr -d '"')
+        _success "Branch ${BRANCH} used"
+    else
+        _info "List of branch available"
+        branches=()
+        while read branch; do
+            branches+=(${branch})
+        done< <(curl -s ${URL_API} |jq '.[].name' |tr -d '"')
+        while true; do
+            nb=1
+            for branch in ${branches[@]}; do
+                echo "  ${nb} - ${branch}"
+                ((nb+=1))
+            done
+            echo -n "Choice branch repo (1-${#branches[@]}): "
+            read NB_BRANCH
+            if [ ${NB_BRANCH} -ge 1 ] && [ ${NB_BRANCH} -le ${#branches[@]} ]; then
+                BRANCH=(${branches[${NB_BRANCH}-1]})
+                _success "Branch ${BRANCH} selected"
+		break
+            fi
         done
-        echo -n "Choice branch repo (1-${#branches[@]}): "
-        read NB_BRANCH
-        if [ ${NB_BRANCH} -ge 1 ] && [ ${NB_BRANCH} -le ${#branches[@]} ]; then
-	    BRANCH=(${branches[${NB_BRANCH}-1]}); break
-        fi
-    done
+    fi
 
     while true; do
         echo -n "Path to index webpage: 
@@ -294,4 +302,6 @@ function main() {
 }
 
 main "$@"
+
+
 
