@@ -65,7 +65,9 @@ function init(){
 
 
 function archive(){
-    echo "${BRANCH} ${REPO} ${DOMAIN}"
+    if [ ! -z "${BRANCH}" ] && [ ! -z "${REPO}" ] && [ ! -z "${DOMAIN}" ]; then
+        tar -zcvf /data/backup/${DOMAIN}-${USER}-${BRANCH}.tar.gz /etc/logrotate.d/${DOMAIN} /var/www/${DOMAIN} /var/spool/cron/crontabs/${USER} /etc/apache2/sites-available/${DOMAIN}.conf /etc/apache2/sites-enabled/${DOMAIN}.conf /etc/letsencrypt/live/${DOMAIN} > /dev/null 2>&1
+    fi
 }
 
 
@@ -78,14 +80,14 @@ function verification(){
             [Nn]*) exit 1;;
         esac
     done
-    #while true; do
-    #    echo -n "Are you sure to delete ${USER}? (yes/no): "
-    #    read DELETE
-    #    case ${DELETE} in
-    #        [Yy]*) delete_user "$USER"; break;;
-    #        [Nn]*) exit 1;;
-    #    esac
-    #done
+    while true; do
+        echo -n "Are you sure to delete ${USER}? (yes/no): "
+        read DELETE
+        case ${DELETE} in
+            [Yy]*) delete_user "$USER"; break;;
+            [Nn]*) exit 1;;
+        esac
+    done
 }
 
 function delete_user(){
