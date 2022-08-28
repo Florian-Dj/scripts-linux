@@ -3,7 +3,7 @@
 # Author : Florian DJERBI
 # Object : Environment deleted
 # Create : 16/08/2022
-# Update : 20/08/2022
+# Update : 28/08/2022
 ###########################
 
 
@@ -80,11 +80,16 @@ function verification(){
             [Nn]*) break;;
         esac
     done
-    if [[ "${ARCHIVE}" =~ [Yy]* ]]; then
+    pattern_regex="Yy"
+    if [[ "${ARCHIVE}" =~ [${pattern_regex}*] ]]; then
         archive "$@"
+    else
+        _error "No archive project"
     fi
-    if [[ "${DELETE}" =~ [Yy]* ]]; then
+    if [[ "${DELETE}" =~ [${pattern_regex}*] ]]; then
         delete_user "$@"
+    else
+        _error "No delete user"
     fi
 }
 
