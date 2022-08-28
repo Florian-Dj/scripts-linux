@@ -3,7 +3,7 @@
 # Author : Florian DJERBI
 # Object : Environment creation
 # Create : 12/07/2022
-# Update : 20/08/2022
+# Update : 28/08/2022
 ###########################
 PATH=/usr/sbin:/usr/bin:/sbin:/bin
 
@@ -45,14 +45,45 @@ function check_package(){
 }
 
 function init(){
+    check_user "$@"
+    check_domain "$@"
+    check_repo "$@"
+    check_branch "$@"
+    check_index "$@"
+    check_update_repo "$@"
+    check_ssl "$@"
+}
+
+function check_user(){
     echo -n "Project name (user): "
     read PROJET
     USER=$( echo "${PROJET}" | cut -c1-30 )
+    if id "${USER}" &>/dev/null; then
+        _error "User ${USER} exist"
+	exit 1
+    fi
+}
+
+function check_domain(){
     echo -n "Domain name (domain.extension): "
     read DOMAIN
+    if [ -d "/var/www/${DOMAIN}" ];then
+        _error "Domain ${DOMAIN} exist"
+	exit 1
+    fi
+}
+
+function check_repo(){
     echo -n "Repository URL: "
     read REPO
+    status_code=$(curl ${REPO} --write-out %{http_code} --silent --output /dev/null)
+    if [[ "$status_code" -ne 200 ]] ; then
+        _error "Link ${REPO} doesn't exist"
+        exit 1
+    fi
+}
 
+function check_branch(){
     URL_API=(https://api.github.com/repos/$(echo ${REPO} |sed 's|https://github.com/||')/branches)
     nb_branch=$(curl -s ${URL_API} |jq -r '. | length')
     if [ $nb_branch = 1 ];then
@@ -79,7 +110,9 @@ function init(){
             fi
         done
     fi
+}
 
+function check_index(){
     while true; do
         echo -n "Path to index webpage: 
   1 - /
@@ -95,7 +128,9 @@ Your Choice (1-4): "
             4) PATH_INDEX="/web"; break;;
         esac
     done
+}
 
+function check_update_repo(){
     while true; do
         read -p "Automatic update of the site from a repo ? (yes/no): " REPO_UPDATE
         case $REPO_UPDATE in
@@ -103,7 +138,9 @@ Your Choice (1-4): "
             [Nn]*) REPO_UPDATE=false; break;;
         esac
     done
+}
 
+function check_ssl(){
     while true; do
         read -p "Create SSL certificates ? (yes/no): " SSL
         case $SSL in
@@ -302,6 +339,3 @@ function main() {
 }
 
 main "$@"
-
-
-
